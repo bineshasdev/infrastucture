@@ -1,0 +1,228 @@
+# Kong Declarative Configuration for FlowCore
+# ==========================================================
+# This file defines all services, routes, and plugins for the
+# FlowCore API Gateway using Kong's DB-less (declarative) mode.
+# ==========================================================
+_format_version: "3.0"
+_transform: true
+
+# ==========================================================
+# Services — one per FlowCore microservice
+# ==========================================================
+
+services:
+
+  # --- CORE LAYER ---
+
+  # 🟠 Platform Service (Config, Menu, Theme, Lookups, Settings, Bootstrap)
+  - name: platform-service
+    url: http://host.containers.internal:8081
+    connect_timeout: 5000
+    read_timeout: 30000
+    retries: 2
+    routes:
+      - name: platform-bootstrap
+        paths: ["/api/v1/config"]
+        strip_path: false
+        preserve_host: true
+      - name: platform-menu
+        paths: ["/api/v1/menu"]
+        strip_path: false
+        preserve_host: true
+      - name: platform-theme
+        paths: ["/api/v1/theme"]
+        strip_path: false
+        preserve_host: true
+      - name: platform-lookups
+        paths: ["/api/v1/lookups"]
+        strip_path: false
+        preserve_host: true
+      - name: platform-settings
+        paths: ["/api/v1/settings"]
+        strip_path: false
+        preserve_host: true
+
+  # 🔵 Tenant Service (Tenants, Users, Billing, Subscriptions)
+  - name: tenant-service
+    url: http://host.containers.internal:8082
+    connect_timeout: 5000
+    read_timeout: 30000
+    retries: 2
+    routes:
+      - name: tenant-account
+        paths: ["/api/v1/account"]
+        strip_path: false
+        preserve_host: true
+      - name: tenant-subscription
+        paths: ["/api/v1/subscription"]
+        strip_path: false
+        preserve_host: true
+      - name: tenant-billing
+        paths: ["/api/v1/billing"]
+        strip_path: false
+        preserve_host: true
+      - name: tenant-users
+        paths: ["/api/v1/users"]
+        strip_path: false
+        preserve_host: true
+      - name: tenant-email-verification
+        paths: ["/api/v1/email-verification"]
+        strip_path: false
+        preserve_host: true
+
+  # 🟢 Document Service (Documents, Search, Reports)
+  - name: document-service
+    url: http://host.containers.internal:8083
+    connect_timeout: 5000
+    read_timeout: 60000
+    retries: 1
+    routes:
+      - name: documents
+        paths: ["/api/v1/documents"]
+        strip_path: false
+        preserve_host: true
+      - name: search
+        paths: ["/api/v1/search"]
+        strip_path: false
+        preserve_host: true
+      - name: reports
+        paths: ["/api/v1/reports"]
+        strip_path: false
+        preserve_host: true
+
+  # 🟡 Workflow Service (Workflows, Approvals, Rules)
+  - name: workflow-service
+    url: http://host.containers.internal:8084
+    connect_timeout: 5000
+    read_timeout: 30000
+    retries: 2
+    routes:
+      - name: workflows
+        paths: ["/api/v1/workflows"]
+        strip_path: false
+        preserve_host: true
+
+  # 🔴 Notification Service (Email, Push, In-App, SMS)
+  - name: notification-service
+    url: http://host.containers.internal:8085
+    connect_timeout: 5000
+    read_timeout: 15000
+    retries: 2
+    routes:
+      - name: notifications
+        paths: ["/api/v1/notifications"]
+        strip_path: false
+        preserve_host: true
+
+  # --- PLUGGABLE LAYER ---
+
+  # 🟣 AI Service (OCR, Classification, Extraction, Validation)
+  - name: ai-service
+    url: http://host.containers.internal:8086
+    connect_timeout: 5000
+    read_timeout: 120000    # AI processing can be slow
+    retries: 0              # Don't retry AI jobs
+    routes:
+      - name: ai
+        paths: ["/api/v1/ai"]
+        strip_path: false
+        preserve_host: true
+
+  # 🔗 Integration Service (Webhooks, Connectors, ERP/CRM)
+  - name: integration-service
+    url: http://host.containers.internal:8087
+    connect_timeout: 5000
+    read_timeout: 30000
+    retries: 2
+    routes:
+      - name: integrations
+        paths: ["/api/v1/integrations"]
+        strip_path: false
+        preserve_host: true
+
+  # Supabase Auth passthrough (for frontend auth calls)
+  - name: supabase-auth
+    url: http://host.containers.internal:54321/auth/v1
+    routes:
+      - name: auth
+        paths: ["/auth/v1"]
+        strip_path: false
+        preserve_host: false
+
+  # Supabase Storage passthrough (for direct file uploads)
+  - name: supabase-storage
+    url: http://host.containers.internal:54321/storage/v1
+    routes:
+      - name: storage
+        paths: ["/storage/v1"]
+        strip_path: false
+        preserve_host: false
+
+# ==========================================================
+# Plugins — global and per-service
+# ==========================================================
+
+plugins:
+
+  # Global CORS
+  - name: cors
+    config:
+      origins: ["http://localhost:3001", "http://127.0.0.1:3001"]
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+      headers: ["Authorization", "Content-Type", "X-Tenant-ID", "X-App-API-Key", "X-Request-ID"]
+      exposed_headers: ["X-Request-ID"]
+      credentials: true
+      max_age: 3600
+
+  # Global rate limiting (per consumer IP)
+  - name: rate-limiting
+    config:
+      minute: 200
+      hour: 5000
+      policy: local
+      fault_tolerant: true
+      hide_client_headers: false
+
+  # Global request ID for tracing
+  - name: correlation-id
+    config:
+      header_name: X-Request-ID
+      generator: uuid
+      echo_downstream: true
+
+  # Cache GET responses for lookups and config (5 min)
+  - name: proxy-cache
+    service: platform-service
+    config:
+      response_code: [200]
+      request_method: ["GET"]
+      content_type: ["application/json"]
+      cache_ttl: 300
+      strategy: memory
+      memory:
+        dictionary_name: kong_db_cache
+
+  # Stricter rate limit on auth-related endpoints
+  - name: rate-limiting
+    service: tenant-service
+    config:
+      minute: 30
+      hour: 200
+      policy: local
+      fault_tolerant: true
+
+  # Stricter rate limit on AI (expensive operations)
+  - name: rate-limiting
+    service: ai-service
+    config:
+      minute: 20
+      hour: 500
+      policy: local
+      fault_tolerant: true
+
+  # Request size limit for document uploads (50MB)
+  - name: request-size-limiting
+    service: document-service
+    config:
+      allowed_payload_size: 50
+      size_unit: megabytes

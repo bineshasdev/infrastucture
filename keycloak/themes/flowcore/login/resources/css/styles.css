@@ -1,0 +1,383 @@
+/* ─── FlowCore Login Theme ───────────────────────────────────────────────── */
+
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── CSS Variables ── */
+:root {
+  --fc-bg:           #0d1117;
+  --fc-surface:      #161b22;
+  --fc-border:       #30363d;
+  --fc-accent:       #4f8ef7;
+  --fc-accent-hover: #3a78e0;
+  --fc-text:         #e6edf3;
+  --fc-text-muted:   #8b949e;
+  --fc-error:        #f85149;
+  --fc-success:      #3fb950;
+  --fc-radius:       10px;
+  --fc-input-bg:     #0d1117;
+}
+
+/* ── Base reset ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--fc-bg);
+  color: var(--fc-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ── Page layout — center the card ── */
+#kc-container,
+.login-pf body,
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--fc-bg) !important;
+}
+
+/* ── Brand header above the card ── */
+#kc-header,
+#kc-header-wrapper {
+  background: transparent !important;
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.fc-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.fc-brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fc-brand-logo svg {
+  width: 36px;
+  height: 36px;
+}
+
+.fc-brand-name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--fc-text);
+}
+
+.fc-brand-tagline {
+  font-size: 13px;
+  color: var(--fc-text-muted);
+}
+
+/* ── Card ── */
+#kc-content,
+#kc-content-wrapper,
+.card-pf,
+.login-pf-page .card-pf {
+  background: var(--fc-surface) !important;
+  border: 1px solid var(--fc-border) !important;
+  border-radius: var(--fc-radius) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  padding: 36px 40px !important;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ── Card title ── */
+#kc-page-title,
+.login-pf-page h1,
+h1 {
+  color: var(--fc-text) !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  margin-bottom: 24px !important;
+  text-align: center;
+}
+
+/* ── Labels ── */
+.pf-c-form__label,
+label,
+.control-label {
+  color: var(--fc-text-muted) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  margin-bottom: 6px !important;
+}
+
+/* ── Inputs ── */
+.pf-c-form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  background: var(--fc-input-bg) !important;
+  border: 1px solid var(--fc-border) !important;
+  border-radius: 6px !important;
+  color: var(--fc-text) !important;
+  font-size: 14px !important;
+  padding: 10px 14px !important;
+  width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+
+.pf-c-form-control:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+  border-color: var(--fc-accent) !important;
+  box-shadow: 0 0 0 3px rgba(79, 142, 247, 0.15) !important;
+}
+
+.pf-c-form-control::placeholder,
+input::placeholder {
+  color: var(--fc-text-muted) !important;
+  opacity: 0.6;
+}
+
+/* ── Form group spacing ── */
+.pf-c-form__group,
+.form-group {
+  margin-bottom: 18px !important;
+}
+
+/* ── Remember me / forgot password row ── */
+#kc-form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.checkbox label,
+#kc-form-options label {
+  color: var(--fc-text-muted) !important;
+  font-size: 13px !important;
+  cursor: pointer;
+}
+
+.checkbox input[type="checkbox"],
+#kc-form-options input[type="checkbox"] {
+  accent-color: var(--fc-accent);
+  margin-right: 6px;
+}
+
+/* Forgot password link */
+#kc-form-options a,
+#kc-form-options .pf-c-form__helper-text a {
+  color: var(--fc-accent) !important;
+  font-size: 13px !important;
+  text-decoration: none;
+}
+
+#kc-form-options a:hover {
+  text-decoration: underline;
+}
+
+/* ── Submit button ── */
+.pf-c-button.pf-m-primary,
+#kc-login,
+input[type="submit"] {
+  background: var(--fc-accent) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  color: #fff !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  padding: 11px 0 !important;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.pf-c-button.pf-m-primary:hover,
+#kc-login:hover {
+  background: var(--fc-accent-hover) !important;
+}
+
+.pf-c-button.pf-m-primary:active,
+#kc-login:active {
+  transform: translateY(1px);
+}
+
+/* ── Alert / error messages ── */
+.alert,
+.pf-c-alert {
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  margin-bottom: 18px !important;
+  padding: 12px 16px !important;
+}
+
+.alert-error,
+.pf-c-alert.pf-m-danger {
+  background: rgba(248, 81, 73, 0.1) !important;
+  border: 1px solid rgba(248, 81, 73, 0.4) !important;
+  color: var(--fc-error) !important;
+}
+
+.alert-warning,
+.pf-c-alert.pf-m-warning {
+  background: rgba(210, 153, 34, 0.1) !important;
+  border: 1px solid rgba(210, 153, 34, 0.4) !important;
+  color: #d29922 !important;
+}
+
+.alert-success,
+.pf-c-alert.pf-m-success {
+  background: rgba(63, 185, 80, 0.1) !important;
+  border: 1px solid rgba(63, 185, 80, 0.4) !important;
+  color: var(--fc-success) !important;
+}
+
+.pf-c-form__helper-text.pf-m-error,
+.kc-feedback-text,
+span[id*="input-error"] {
+  color: var(--fc-error) !important;
+  font-size: 12px !important;
+  margin-top: 5px !important;
+}
+
+/* ── Divider ── */
+.fc-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--fc-text-muted);
+  font-size: 12px;
+}
+
+.fc-divider::before,
+.fc-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--fc-border);
+}
+
+/* ── Social / identity providers ── */
+#kc-social-providers {
+  margin-top: 4px;
+}
+
+#kc-social-providers ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-c-button.pf-m-secondary,
+.zocial,
+.social-link {
+  background: var(--fc-bg) !important;
+  border: 1px solid var(--fc-border) !important;
+  border-radius: 6px !important;
+  color: var(--fc-text) !important;
+  font-size: 14px !important;
+  padding: 10px 16px !important;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.pf-c-button.pf-m-secondary:hover,
+.zocial:hover,
+.social-link:hover {
+  border-color: var(--fc-accent) !important;
+  background: rgba(79, 142, 247, 0.06) !important;
+}
+
+/* ── Registration link below the card ── */
+#kc-registration,
+#kc-registration-container {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--fc-text-muted);
+}
+
+#kc-registration a {
+  color: var(--fc-accent) !important;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+#kc-registration a:hover {
+  text-decoration: underline;
+}
+
+/* ── Password visibility toggle ── */
+.kc-password-view-btn,
+button[data-password-toggle] {
+  background: transparent !important;
+  border: none !important;
+  color: var(--fc-text-muted) !important;
+  cursor: pointer;
+  padding: 0 10px !important;
+}
+
+.kc-password-view-btn:hover,
+button[data-password-toggle]:hover {
+  color: var(--fc-text) !important;
+}
+
+/* ── Input group (password + toggle button) ── */
+.pf-c-input-group {
+  display: flex;
+  border: 1px solid var(--fc-border) !important;
+  border-radius: 6px !important;
+  overflow: hidden;
+  background: var(--fc-input-bg) !important;
+}
+
+.pf-c-input-group .pf-c-form-control {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  flex: 1;
+}
+
+.pf-c-input-group:focus-within {
+  border-color: var(--fc-accent) !important;
+  box-shadow: 0 0 0 3px rgba(79, 142, 247, 0.15) !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  #kc-content,
+  #kc-content-wrapper,
+  .card-pf {
+    padding: 28px 20px !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    max-width: 100%;
+  }
+}
