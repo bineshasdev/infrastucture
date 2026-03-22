@@ -1,3 +1,8 @@
+<#--
+  FlowCore — login page.
+  Pre-fills the username field from login_hint (login.username).
+  Uses our custom template.ftl (no PatternFly).
+-->
 <#import "template.ftl" as layout>
 
 <@layout.registrationLayout
@@ -5,148 +10,161 @@
     displayInfo=realm.password && realm.registrationAllowed && !registrationDisabled??;
     section>
 
-  <#-- ── Brand header ────────────────────────────────────────────── -->
-  <#if section = "header">
-    <div class="fc-brand">
-      <div class="fc-brand-logo">
-        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect width="36" height="36" rx="8" fill="#4f8ef7"/>
-          <path d="M10 18 L18 10 L26 18 L18 26 Z" fill="white" opacity="0.9"/>
-          <circle cx="18" cy="18" r="4" fill="#4f8ef7"/>
-        </svg>
-        <span class="fc-brand-name">FlowCore</span>
-      </div>
-      <span class="fc-brand-tagline">Sign in to your workspace</span>
-    </div>
+  <#-- ── Login form ───────────────────────────────────────── -->
+  <#if section = "form">
+    <#if realm.password>
+      <form id="kc-form-login" action="${url.loginAction}" method="post" novalidate>
 
-  <#-- ── Login form ───────────────────────────────────────────────── -->
-  <#elseif section = "form">
-    <div id="kc-form">
-      <div id="kc-form-wrapper">
-        <#if realm.password>
-          <form id="kc-form-login" action="${url.loginAction}" method="post" onsubmit="return true;">
-
-            <#-- Username / email -->
-            <#if !usernameHidden??>
-              <div class="${properties.kcFormGroupClass!}">
-                <label for="username" class="${properties.kcLabelClass!}">
-                  <#if !realm.loginWithEmailAllowed>${msg("username")}
-                  <#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}
-                  <#else>${msg("email")}
-                  </#if>
-                </label>
-                <input tabindex="1"
-                       id="username"
-                       class="${properties.kcInputClass!}"
-                       name="username"
-                       value="${(login.username!'')}"
-                       type="text"
-                       autofocus
-                       autocomplete="username"
-                       placeholder="<#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if>"
-                       aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>"/>
-                <#if messagesPerField.existsError('username','password')>
-                  <span id="input-error" class="${properties.kcInputErrorMessageClass!}" aria-live="polite">
-                    ${kcSanitize(messagesPerField.getFirstError('username','password'))?no_esc}
-                  </span>
-                </#if>
+        <#-- ── Username / email ─────────────────────────────── -->
+        <#if !usernameHidden??>
+          <div class="fc-field <#if messagesPerField.existsError('username','password')>fc-field--error</#if>">
+            <label class="fc-label" for="username">
+              <#if !realm.loginWithEmailAllowed>${msg("username")}
+              <#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}
+              <#else>${msg("email")}
+              </#if>
+            </label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              class="fc-input"
+              value="${(login.username!'')}"
+              tabindex="1"
+              autofocus
+              autocomplete="username"
+              <#if (login.username!'') != ''>readonly</#if>
+              placeholder="<#if !realm.loginWithEmailAllowed>username<#elseif !realm.registrationEmailAsUsername>username or email<#else>you@company.com</#if>"
+              aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>"/>
+            <#-- Show a "change account" link when pre-filled -->
+            <#if (login.username!'') != ''>
+              <div class="fc-hint">
+                Not you?
+                <a href="${url.loginRestartFlowUrl}" class="fc-link" tabindex="-1">Use a different account</a>
               </div>
             </#if>
-
-            <#-- Password -->
-            <div class="${properties.kcFormGroupClass!}">
-              <label for="password" class="${properties.kcLabelClass!}">${msg("password")}</label>
-              <div class="${properties.kcInputGroup!}">
-                <input tabindex="2"
-                       id="password"
-                       class="${properties.kcInputClass!}"
-                       name="password"
-                       type="password"
-                       autocomplete="current-password"
-                       placeholder="${msg('password')}"
-                       aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>"/>
-                <button class="${properties.kcFormPasswordVisibilityButtonClass!}"
-                        type="button"
-                        aria-label="${msg('showPassword')}"
-                        aria-controls="password"
-                        data-password-toggle
-                        data-icon-show="${properties.kcFormPasswordVisibilityIconShow!}"
-                        data-icon-hide="${properties.kcFormPasswordVisibilityIconHide!}"
-                        data-label-show="${msg('showPassword')}"
-                        data-label-hide="${msg('hidePassword')}">
-                  <i class="${properties.kcFormPasswordVisibilityIconShow!}" aria-hidden="true"></i>
-                </button>
-              </div>
-            </div>
-
-            <#-- Remember me + forgot password row -->
-            <div class="${properties.kcFormGroupClass!} ${properties.kcFormSettingClass!}">
-              <div id="kc-form-options">
-                <#if realm.rememberMe && !usernameHidden??>
-                  <div class="checkbox">
-                    <label>
-                      <input tabindex="3" id="rememberMe" name="rememberMe" type="checkbox"
-                             <#if login.rememberMe??>checked</#if>>
-                      ${msg("rememberMe")}
-                    </label>
-                  </div>
-                </#if>
-                <div class="${properties.kcFormOptionsWrapperClass!}">
-                  <#if realm.resetPasswordAllowed>
-                    <a tabindex="5" href="${url.loginResetCredentialsUrl}">${msg("doForgotPassword")}</a>
-                  </#if>
-                </div>
-              </div>
-            </div>
-
-            <#-- Submit -->
-            <div id="kc-form-buttons" class="${properties.kcFormGroupClass!}">
-              <input type="hidden" id="id-hidden-input" name="credentialId"
-                     <#if auth.selectedCredential?has_content>value="${auth.selectedCredential}"</#if>/>
-              <input tabindex="4"
-                     class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonBlockClass!} ${properties.kcButtonLargeClass!}"
-                     name="login" id="kc-login" type="submit" value="${msg('doLogIn')}"/>
-            </div>
-
-          </form>
-        </#if>
-
-        <#-- Social / identity providers -->
-        <#if social?? && social.providers?has_content>
-          <div class="fc-divider">or continue with</div>
-          <div id="kc-social-providers">
-            <ul>
-              <#list social.providers as p>
-                <li>
-                  <a id="social-${p.alias}"
-                     class="${properties.kcFormSocialAccountListLinkClass!}"
-                     href="${p.loginUrl}"
-                     type="button">
-                    <#if p.iconClasses?has_content>
-                      <i class="${p.iconClasses!}" aria-hidden="true"></i>
-                    </#if>
-                    ${p.displayName!}
-                  </a>
-                </li>
-              </#list>
-            </ul>
           </div>
         </#if>
 
-      </div>
-    </div>
+        <#-- ── Password ──────────────────────────────────────── -->
+        <div class="fc-field <#if messagesPerField.existsError('username','password')>fc-field--error</#if>">
+          <div class="fc-label-row">
+            <label class="fc-label" for="password">${msg("password")}</label>
+            <#if realm.resetPasswordAllowed>
+              <a class="fc-link fc-link--small" href="${url.loginResetCredentialsUrl}" tabindex="5">
+                ${msg("doForgotPassword")}
+              </a>
+            </#if>
+          </div>
+          <div class="fc-input-group">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              class="fc-input fc-input--password"
+              tabindex="2"
+              autocomplete="current-password"
+              placeholder="••••••••••••"
+              aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>"/>
+            <button
+              class="fc-pw-toggle"
+              type="button"
+              tabindex="-1"
+              aria-label="${msg('showPassword')}"
+              onclick="togglePassword(this)">
+              <svg class="fc-pw-icon fc-pw-icon--show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/>
+                <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+              </svg>
+              <svg class="fc-pw-icon fc-pw-icon--hide" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="display:none">
+                <path fill-rule="evenodd" d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.091 1.092a4 4 0 00-5.557-5.557z" clip-rule="evenodd"/>
+                <path d="M10.748 13.93l2.523 2.524a9.987 9.987 0 01-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 010-1.186A10.007 10.007 0 012.839 6.02L6.07 9.252a4 4 0 004.678 4.678z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
 
-  <#-- ── Register link ────────────────────────────────────────────── -->
+        <#-- ── Field-level error ─────────────────────────────── -->
+        <#if messagesPerField.existsError('username','password')>
+          <p class="fc-error-msg" role="alert">
+            ${kcSanitize(messagesPerField.getFirstError('username','password'))?no_esc}
+          </p>
+        </#if>
+
+        <#-- ── Remember me ───────────────────────────────────── -->
+        <#if realm.rememberMe && !usernameHidden??>
+          <label class="fc-checkbox-label">
+            <input
+              id="rememberMe"
+              name="rememberMe"
+              type="checkbox"
+              class="fc-checkbox"
+              tabindex="3"
+              <#if login.rememberMe??>checked</#if>>
+            <span>${msg("rememberMe")}</span>
+          </label>
+        </#if>
+
+        <#-- ── Submit ────────────────────────────────────────── -->
+        <input type="hidden" id="id-hidden-input" name="credentialId"
+               <#if auth.selectedCredential?has_content>value="${auth.selectedCredential}"</#if>/>
+        <button
+          id="kc-login"
+          type="submit"
+          class="fc-btn fc-btn--primary"
+          tabindex="4">
+          ${msg("doLogIn")}
+        </button>
+
+        <#-- ── Social / identity providers ─────────────────── -->
+        <#if social?? && social.providers?has_content>
+          <div class="fc-divider">
+            <span>${msg("identity-provider-login-label")!'or continue with'}</span>
+          </div>
+          <div class="fc-social-list">
+            <#list social.providers as p>
+              <a id="social-${p.alias}"
+                 class="fc-btn fc-btn--social"
+                 href="${p.loginUrl}">
+                <#if p.iconClasses?has_content>
+                  <i class="${p.iconClasses!}" aria-hidden="true"></i>
+                </#if>
+                ${p.displayName!}
+              </a>
+            </#list>
+          </div>
+        </#if>
+
+      </form>
+    </#if>
+
+  <#-- ── Register link ─────────────────────────────────────── -->
   <#elseif section = "info">
     <#if realm.password && realm.registrationAllowed && !registrationDisabled??>
-      <div id="kc-registration-container">
-        <div id="kc-registration">
-          <span>${msg("noAccount")}
-            <a tabindex="6" href="${url.registrationUrl}">${msg("doRegister")}</a>
-          </span>
-        </div>
-      </div>
+      <p class="fc-info-text">
+        ${msg("noAccount")}
+        <a class="fc-link" href="${url.registrationUrl}" tabindex="6">${msg("doRegister")}</a>
+      </p>
     </#if>
   </#if>
 
 </@layout.registrationLayout>
+
+<script>
+  function togglePassword(btn) {
+    var input   = document.getElementById('password');
+    var iconShow = btn.querySelector('.fc-pw-icon--show');
+    var iconHide = btn.querySelector('.fc-pw-icon--hide');
+    if (input.type === 'password') {
+      input.type = 'text';
+      iconShow.style.display = 'none';
+      iconHide.style.display = '';
+      btn.setAttribute('aria-label', '${msg("hidePassword")}');
+    } else {
+      input.type = 'password';
+      iconShow.style.display = '';
+      iconHide.style.display = 'none';
+      btn.setAttribute('aria-label', '${msg("showPassword")}');
+    }
+  }
+</script>

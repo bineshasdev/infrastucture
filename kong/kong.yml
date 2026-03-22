@@ -7,6 +7,31 @@ _format_version: "3.0"
 _transform: true
 
 # ==========================================================
+# Consumers
+# ==========================================================
+# anonymous — used as a fallback identity for passthrough routes
+# (Supabase auth/storage handle their own token validation)
+consumers:
+  - username: anonymous
+    id: 00000000-0000-0000-0000-000000000001
+
+  # Keycloak realm — holds the RS256 public key for all tokens
+  # issued by this realm (authorization code flow or otherwise).
+  #
+  # Get the public key (base64-encoded DER) then wrap it in PEM:
+  #   curl -s http://localhost:9080/realms/master | jq -r '.public_key'
+  # Paste the output between the PEM headers below.
+  - username: keycloak-realm
+    id: 00000000-0000-0000-0000-000000000002
+    jwt_secrets:
+      - key: http://localhost:9080/realms/master   # must match 'iss' in the JWT
+        algorithm: RS256
+        rsa_public_key: |
+          -----BEGIN PUBLIC KEY-----
+          MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr6bmWda5RPvfPcYVcx7c9/5evUCJN5zd8aCEHDWxGiIMlyOmA4EfuAUZfDDiedNXmYV3d/jPzEig1FmCMZrmdy0vJTMb/pkKb28iiHcDKR4EzYarSXB6DDzeSKPviGuAGXoHLhIZdjhmseaCR/6JzC5k7+rQQxnFwN/qd0KPnxI0WamTMPpdV5fq655tgkhj4AT1gkzkDaw46FzvQMg4xYdIykRGtlxfWvyKsoGOJsE3AqOHzWw1zETy9Yb/DAtXeV7W/TlVkUKpcIsHSVJCbLuVezd8aQBuMzueQFf6kpsHYPnIXZ5CuDpFZLrESKBZOPb/4HDU6HHbBYVzc6UtRwIDAQAB
+          -----END PUBLIC KEY-----
+
+# ==========================================================
 # Services — one per FlowCore microservice
 # ==========================================================
 
@@ -16,13 +41,13 @@ services:
 
   # 🟠 Platform Service (Config, Menu, Theme, Lookups, Settings, Bootstrap)
   - name: platform-service
-    url: http://host.containers.internal:8081
+    url: http://host.containers.internal:8083
     connect_timeout: 5000
     read_timeout: 30000
     retries: 2
     routes:
       - name: platform-bootstrap
-        paths: ["/api/v1/config"]
+        paths: ["/api/v1/bootstrap"]
         strip_path: false
         preserve_host: true
       - name: platform-menu
@@ -139,24 +164,7 @@ services:
         paths: ["/api/v1/integrations"]
         strip_path: false
         preserve_host: true
-
-  # Supabase Auth passthrough (for frontend auth calls)
-  - name: supabase-auth
-    url: http://host.containers.internal:54321/auth/v1
-    routes:
-      - name: auth
-        paths: ["/auth/v1"]
-        strip_path: false
-        preserve_host: false
-
-  # Supabase Storage passthrough (for direct file uploads)
-  - name: supabase-storage
-    url: http://host.containers.internal:54321/storage/v1
-    routes:
-      - name: storage
-        paths: ["/storage/v1"]
-        strip_path: false
-        preserve_host: false
+ 
 
 # ==========================================================
 # Plugins — global and per-service
@@ -202,14 +210,6 @@ plugins:
       memory:
         dictionary_name: kong_db_cache
 
-  # Stricter rate limit on auth-related endpoints
-  - name: rate-limiting
-    service: tenant-service
-    config:
-      minute: 30
-      hour: 200
-      policy: local
-      fault_tolerant: true
 
   # Stricter rate limit on AI (expensive operations)
   - name: rate-limiting
@@ -226,3 +226,105 @@ plugins:
     config:
       allowed_payload_size: 50
       size_unit: megabytes
+
+  # ==========================================================
+  # JWT Validation — free Kong OSS plugins
+  # ==========================================================
+  #
+  # How it works:
+  #   1. Kong reads the 'iss' claim from the Bearer token and
+  #      matches it to the keycloak-realm consumer credential.
+  #   2. The RS256 signature is verified locally against the
+  #      registered public key — no round-trip to Keycloak.
+  #   3. exp and nbf claims are verified.
+  #   4. The pre-function plugin (runs in rewrite phase, before
+  #      jwt validation) strips any client-forged X-Authenticated-*
+  #      headers and injects real values decoded from the JWT
+  #      payload, so upstream Spring services receive the same
+  #      identity headers they relied on previously.
+  #   5. The original Authorization: Bearer <token> header is
+  #      preserved so Spring Security can do its own role/tenant
+  #      checks without re-reading the raw token.
+  #
+  # Setup:
+  #   curl -s http://localhost:9080/realms/master | jq -r '.public_key'
+  #   Paste the result (as-is, no PEM headers needed) into the
+  #   keycloak-realm consumer's rsa_public_key above.
+  # ==========================================================
+
+  # ── Global JWT validation — protects all /api/v1/* routes ──
+  - name: jwt
+    config:
+      key_claim_name: iss          # use 'iss' to look up the consumer credential
+      claims_to_verify:
+        - exp
+        - nbf
+      header_names:
+        - authorization
+      secret_is_base64: false
+
+  # ── Inject X-Authenticated-* headers from JWT payload ───────
+  # Runs in the rewrite phase (before the jwt access-phase
+  # check). Strips client-provided headers first to prevent
+  # spoofing, then sets them from the decoded JWT payload.
+  # If the token is missing or invalid the jwt plugin rejects
+  # the request with 401 and upstream never receives these.
+  - name: pre-function
+    config:
+      rewrite:
+        - |
+          -- strip any client-forged headers before setting real values
+          kong.service.request.clear_header("X-Authenticated-UserID")
+          kong.service.request.clear_header("X-Authenticated-Email")
+          kong.service.request.clear_header("X-Authenticated-Username")
+          kong.service.request.clear_header("X-Authenticated-Client")
+          kong.service.request.clear_header("X-Org-ID")
+          kong.service.request.clear_header("X-Org-Name")
+
+          local auth = kong.request.get_header("authorization")
+          if not auth then return end
+          local token = auth:match("^[Bb]earer (.+)$")
+          if not token then return end
+
+          -- extract the second JWT segment (payload)
+          local payload_b64 = token:match("^[^.]+%.([^.]+)%.")
+          if not payload_b64 then return end
+
+          -- base64url → base64
+          payload_b64 = payload_b64:gsub("-", "+"):gsub("_", "/")
+          local pad = #payload_b64 % 4
+          if pad == 2 then payload_b64 = payload_b64 .. "=="
+          elseif pad == 3 then payload_b64 = payload_b64 .. "=" end
+
+          local ok, claims = pcall(
+            require("cjson").decode,
+            ngx.decode_base64(payload_b64)
+          )
+          if not ok or type(claims) ~= "table" then return end
+
+          if claims.sub then
+            kong.service.request.set_header("X-Authenticated-UserID", claims.sub)
+          end
+          if claims.email then
+            kong.service.request.set_header("X-Authenticated-Email", claims.email)
+          end
+          if claims.preferred_username then
+            kong.service.request.set_header("X-Authenticated-Username", claims.preferred_username)
+          end
+          if claims.azp then
+            kong.service.request.set_header("X-Authenticated-Client", claims.azp)
+          end
+
+          -- Keycloak 26+ organization claim:
+          -- "organization": { "<alias>": { "id": "<uuid>" } }
+          -- alias = org name/slug, id = Keycloak org UUID (maps to Tenant.tenantId)
+          if type(claims.organization) == "table" then
+            local org_name, org_details = next(claims.organization)
+            if org_name then
+              kong.service.request.set_header("X-Org-Name", org_name)
+            end
+            if type(org_details) == "table" and org_details.id then
+              kong.service.request.set_header("X-Org-ID", org_details.id)
+            end
+          end
+ 
