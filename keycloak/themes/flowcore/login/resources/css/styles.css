@@ -1,45 +1,45 @@
-/* ── FlowCore Login Theme ──────────────────────────────────────────────────
-   Self-contained styles for the custom Keycloak login page.
+/* ── HashiFlow Login Theme ─────────────────────────────────────────────────
+   White background, taupe accent palette.
    No PatternFly / Bootstrap overrides — we own the entire layout.
    ─────────────────────────────────────────────────────────────────────── */
 
 /* ── Tokens ────────────────────────────────────────────────────────────── */
 :root {
-  --fc-bg:           #08080e;
-  --fc-surface:      #0f0f17;
-  --fc-card:         #13131d;
-  --fc-border:       #1e1e2e;
-  --fc-border-focus: #6366f1;
+  --fc-bg:           #ffffff;
+  --fc-surface:      #faf9f7;
+  --fc-card:         #ffffff;
+  --fc-border:       #e8e3dd;
+  --fc-border-focus: #8f8373;
 
-  --fc-accent:       #6366f1;
-  --fc-accent-hover: #5254cc;
-  --fc-accent-glow:  rgba(99, 102, 241, 0.18);
+  --fc-accent:       #7a5c45;
+  --fc-accent-hover: #6b4f3a;
+  --fc-accent-glow:  rgba(143, 131, 115, 0.15);
 
-  --fc-text:         #e2e8f0;
-  --fc-text-muted:   #64748b;
-  --fc-text-hint:    #94a3b8;
+  --fc-text:         #1c1917;
+  --fc-text-muted:   #78716c;
+  --fc-text-hint:    #57534e;
 
-  --fc-error:        #f87171;
-  --fc-error-bg:     rgba(248, 113, 113, 0.08);
-  --fc-error-border: rgba(248, 113, 113, 0.25);
+  --fc-error:        #b91c1c;
+  --fc-error-bg:     #fef2f2;
+  --fc-error-border: #fecaca;
 
-  --fc-warn:         #fb923c;
-  --fc-warn-bg:      rgba(251, 146, 60, 0.08);
-  --fc-warn-border:  rgba(251, 146, 60, 0.25);
+  --fc-warn:         #b45309;
+  --fc-warn-bg:      #fffbeb;
+  --fc-warn-border:  #fde68a;
 
-  --fc-success:      #4ade80;
-  --fc-success-bg:   rgba(74, 222, 128, 0.08);
-  --fc-success-border: rgba(74, 222, 128, 0.25);
+  --fc-success:      #15803d;
+  --fc-success-bg:   #f0fdf4;
+  --fc-success-border: #bbf7d0;
 
-  --fc-info-bg:      rgba(99, 102, 241, 0.08);
-  --fc-info-border:  rgba(99, 102, 241, 0.25);
+  --fc-info-bg:      #faf9f7;
+  --fc-info-border:  #e8e3dd;
 
   --fc-radius-sm:    6px;
   --fc-radius:       10px;
-  --fc-radius-lg:    14px;
+  --fc-radius-lg:    12px;
 
-  --fc-shadow:       0 4px 6px -1px rgba(0,0,0,.4), 0 2px 4px -2px rgba(0,0,0,.3);
-  --fc-shadow-lg:    0 20px 40px -8px rgba(0,0,0,.7), 0 8px 16px -4px rgba(0,0,0,.5);
+  --fc-shadow:       0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --fc-shadow-lg:    0 4px 24px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.05);
 }
 
 /* ── Reset ──────────────────────────────────────────────────────────────── */
@@ -58,47 +58,22 @@ html, body {
 
 /* ── Page shell ─────────────────────────────────────────────────────────── */
 .fc-page {
-  position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  overflow: hidden;
+  background: var(--fc-bg);
 }
 
-/* ── Ambient glow ────────────────────────────────────────────────────────
-   Subtle colored radial gradients behind the card for depth.           */
-.fc-bg-glow {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(120px);
-  pointer-events: none;
-  z-index: 0;
-}
-.fc-bg-glow--top {
-  width: 600px; height: 400px;
-  top: -120px; left: 50%; transform: translateX(-50%);
-  background: radial-gradient(ellipse, rgba(99,102,241,.15) 0%, transparent 70%);
-}
-.fc-bg-glow--bottom {
-  width: 500px; height: 300px;
-  bottom: -80px; right: -100px;
-  background: radial-gradient(ellipse, rgba(79,142,247,.10) 0%, transparent 70%);
-}
-
-/* ── Main content column ─────────────────────────────────────────────────
-   Stacks brand → alert → card → info vertically, centered.            */
+/* ── Main content column ─────────────────────────────────────────────────  */
 .fc-main {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
   max-width: 400px;
-  gap: 0;
 }
 
 /* ── Brand block ─────────────────────────────────────────────────────────  */
@@ -106,22 +81,19 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 32px;
+  gap: 8px;
+  margin-bottom: 28px;
 }
 
 .fc-brand-logo {
-  display: flex;
+      height: 90px;
+      display: flex;
   align-items: center;
-  gap: 11px;
   text-decoration: none;
 }
 
-.fc-brand-name {
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.6px;
-  color: var(--fc-text);
+.fc-logo-img {
+  width: 250px;
 }
 
 .fc-brand-tagline {
@@ -167,6 +139,81 @@ html, body {
   flex-direction: column;
   gap: 0;
 }
+
+/* ── Card title / subtitle (reset-password, update-password, MFA) ────────  */
+.fc-card-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--fc-text);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.fc-card-subtitle {
+  font-size: 13.5px;
+  color: var(--fc-text-muted);
+  margin-bottom: 22px;
+  line-height: 1.5;
+}
+
+/* ── Button group (stacked primary + ghost) ──────────────────────────────  */
+.fc-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* ── Ghost / secondary button ────────────────────────────────────────────  */
+.fc-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--fc-border);
+  color: var(--fc-text-hint);
+}
+.fc-btn--ghost:hover {
+  border-color: var(--fc-border-focus);
+  color: var(--fc-text);
+  background: var(--fc-surface);
+}
+.fc-btn--ghost:focus-visible {
+  outline: 2px solid var(--fc-border-focus);
+  outline-offset: 2px;
+}
+
+/* ── OTP code input ──────────────────────────────────────────────────────  */
+.fc-input--otp {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-align: center;
+  height: 52px;
+}
+
+/* ── OTP device selector ─────────────────────────────────────────────────  */
+.fc-otp-devices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.fc-otp-device {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--fc-border);
+  border-radius: var(--fc-radius-sm);
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--fc-text-hint);
+  transition: border-color 0.15s, background 0.15s;
+}
+.fc-otp-device:hover { border-color: var(--fc-border-focus); background: var(--fc-surface); }
+.fc-otp-device--selected { border-color: var(--fc-accent); background: var(--fc-surface); color: var(--fc-text); }
+
+.fc-otp-device-radio { accent-color: var(--fc-accent); flex-shrink: 0; }
+.fc-otp-device-name  { font-weight: 500; }
 
 /* ── Form fields ─────────────────────────────────────────────────────────  */
 .fc-field {
@@ -216,8 +263,8 @@ html, body {
 
 /* Read-only username (pre-filled from login_hint) */
 .fc-input[readonly] {
-  color: var(--fc-text-hint);
-  background: rgba(255,255,255,.03);
+  color: var(--fc-text-muted);
+  background: var(--fc-surface);
   cursor: default;
 }
 
@@ -303,7 +350,7 @@ html, body {
   font-weight: 500;
   transition: opacity 0.12s;
 }
-.fc-link:hover { opacity: 0.8; text-decoration: underline; }
+.fc-link:hover { opacity: 0.75; text-decoration: underline; }
 
 .fc-link--small {
   font-size: 12.5px;
@@ -331,12 +378,12 @@ html, body {
 .fc-btn--primary {
   background: var(--fc-accent);
   color: #fff;
-  box-shadow: 0 1px 3px rgba(99,102,241,.4), 0 4px 12px rgba(99,102,241,.2);
+  box-shadow: 0 1px 3px rgba(122,92,69,.3), 0 3px 8px rgba(122,92,69,.15);
   margin-top: 4px;
 }
 .fc-btn--primary:hover {
   background: var(--fc-accent-hover);
-  box-shadow: 0 2px 6px rgba(99,102,241,.5), 0 6px 16px rgba(99,102,241,.25);
+  box-shadow: 0 2px 6px rgba(122,92,69,.4), 0 5px 12px rgba(122,92,69,.2);
 }
 .fc-btn--primary:active { transform: translateY(1px); }
 .fc-btn--primary:focus-visible {
@@ -352,8 +399,8 @@ html, body {
   margin-top: 8px;
 }
 .fc-btn--social:hover {
-  border-color: rgba(99,102,241,.5);
-  background: rgba(99,102,241,.05);
+  border-color: var(--fc-border-focus);
+  background: var(--fc-bg);
 }
 .fc-btn--social:focus-visible {
   outline: 2px solid var(--fc-border-focus);
@@ -402,6 +449,6 @@ html, body {
     padding: 24px 20px 22px;
     border-radius: var(--fc-radius);
   }
-  .fc-brand-name { font-size: 21px; }
-  .fc-brand { margin-bottom: 24px; }
+  .fc-logo-img { height: 32px; }
+  .fc-brand { margin-bottom: 20px; }
 }

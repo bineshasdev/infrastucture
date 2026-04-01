@@ -1,5 +1,5 @@
 <#--
-  FlowCore — custom login layout template.
+  HashiFlow — custom login layout template.
   Fully self-contained: no PatternFly / Bootstrap dependency.
   Parent = keycloak (for i18n messages only).
 -->
@@ -25,28 +25,17 @@
 
 <div class="fc-page">
 
-  <#-- Background decorations -->
-  <div class="fc-bg-glow fc-bg-glow--top" aria-hidden="true"></div>
-  <div class="fc-bg-glow fc-bg-glow--bottom" aria-hidden="true"></div>
-
   <main class="fc-main" role="main">
 
     <#-- ── Brand ──────────────────────────────────────────── -->
-    <div class="fc-brand" aria-label="${properties.flowcoreAppName!'FlowCore'}">
-      <div class="fc-brand-logo">
-        <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect width="44" height="44" rx="12" fill="url(#fc-grad)"/>
-          <path d="M14 23L22 15L30 23" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M14 30L22 22L30 30" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
-          <defs>
-            <linearGradient id="fc-grad" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#6366f1"/>
-              <stop offset="1" stop-color="#4f8ef7"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <span class="fc-brand-name">${properties.flowcoreAppName!'FlowCore'}</span>
-      </div>
+    <div class="fc-brand" aria-label="${properties.hashiflowAppName!'HashiFlow'}">
+      <a href="${properties.kcLogoLink!'#'}" class="fc-brand-logo">
+        <img
+          src="${url.resourcesPath}/img/logo.svg"
+          alt="${properties.hashiflowAppName!'HashiFlow'}"
+          class="fc-logo-img"
+        />
+      </a>
       <p class="fc-brand-tagline">Sign in to your workspace</p>
     </div>
 
@@ -88,7 +77,6 @@
 <#-- Keycloak auth-state element required for back-channel logout -->
 <div id="kc-auth-state" style="display:none;"></div>
 
-<#-- Inline scripts (back-channel logout, etc.) -->
 <#if scripts??>
   <#list scripts as script>
     <script src="${script}" type="text/javascript"></script>

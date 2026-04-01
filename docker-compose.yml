@@ -137,6 +137,7 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: flowcore
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
     ports:
       - "8085:8080"             # http://localhost:8085
     deploy:
@@ -176,7 +177,75 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  # ── Redis ─────────────────────────────────────────────────────────
+  redis:
+    image: docker.io/library/redis:7-alpine
+    container_name: flowcore-redis
+    command: redis-server --save 60 1 --loglevel warning --maxmemory 128mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 160m
+        reservations:
+          memory: 64m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ── Schema Registry ───────────────────────────────────────────────
+  schema-registry:
+    image: docker.io/confluentinc/cp-schema-registry:7.7.1
+    container_name: flowcore-schema-registry
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:29092
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    ports:
+      - "8081:8081"             # http://localhost:8081
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+        reservations:
+          memory: 128m
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/subjects"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ── Redis Commander (Web UI) ───────────────────────────────────────
+  redis-commander:
+    image: docker.io/rediscommander/redis-commander:latest
+    container_name: flowcore-redis-ui
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8082:8081"             # http://localhost:8082  (8081 is reserved for Schema Registry)
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   kafka-data:
   consul-data:
   postgres-data:
+  redis-data:
